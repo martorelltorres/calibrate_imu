@@ -1,20 +1,20 @@
-This  ROS node will read messages published to the /imu/data and /imu/mag topics. alibration. 
+This  ROS node will read messages published to the /imu/data and /imu/mag topics in order to perform the magnetometer calibration.
 
-* To run the node
+* To run the calibration process:
 
-roslaunch calibrate_imu calibrator.launch 
+       roslaunch calibrate_imu calibrator.launch 
 
-* To start collecting samples from the IMU
+* To start collecting samples from the IMU:
 
-rosservice call /start_sampling
+       rosservice call /start_sampling
 
-* To calibrate the magnetometer using the current data samples
+* To calibrate the magnetometer using the current data samples:
 
-rosservice call /calibrate_mag
+       rosservice call /calibrate_mag
 
 This will store the calibration parameters in a file called "mag_calibration_d_m_y_H_M_S", where d_m_y_H_M_S is the time the file was created.  For an example on how to read the file you can look at the plot_calibration_data.py script
 
-* To visualize the raw data from the magnetometer and the calibrated data
+* To visualize the raw data from the magnetometer and the calibrated data:
 
-python plot_calibration_data.py ../data/mag_calibration_d_m_y_H_M_S
+       python plot_calibration_data.py ../data/mag_calibration_d_m_y_H_M_S
 
