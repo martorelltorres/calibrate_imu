@@ -1,8 +1,7 @@
 #!/usr/bin/env python2
 import rospy
 from std_msgs.msg import Header
-from sensor_msgs.msg import Imu
-from geometry_msgs.msg import Vector3Stamped
+from sensor_msgs.msg import Imu, MagneticField
 from std_srvs.srv import Empty, EmptyResponse
 import math
 import pickle
@@ -24,10 +23,10 @@ class calibrate_imu:
         self.publish_calibrated = rospy.get_param("~publish_calibrated", False)
         self.max_samples = rospy.get_param("~max_samples", 5000)
         self.__location__ = rospy.get_param("~calibrations_dir", "/data/mag_calibration")
-        self.calibrated_mag_pub = rospy.Publisher('/imu/mag_calibrated',Vector3Stamped, queue_size='1')
+        self.calibrated_mag_pub = rospy.Publisher('/imu/mag_calibrated',MagneticField, queue_size='1')
         self.load_calibration()
 
-        rospy.Subscriber(mag_topic,Vector3Stamped,self.mag_cb)
+        rospy.Subscriber(mag_topic,MagneticField,self.mag_cb)
         rospy.Subscriber(imu_topic,Imu, self.imu_cb)
         rospy.Service('start_sampling',Empty,self.start_sampling)
         rospy.Service('stop_sampling',Empty,self.stop_sampling)
@@ -51,7 +50,7 @@ class calibrate_imu:
     def mag_cb(self,data):
         if self.sampling == True:
              #collect measurements
-             self.mag_samples.append([data.vector.x,data.vector.y,data.vector.z])
+             self.mag_samples.append([data.magnetic_field.x,data.magnetic_field.y,data.magnetic_field.z])
              if len(self.mag_samples)%50==0:
                  rospy.loginfo("Got %d magnetometer readings"%(len(self.mag_samples)))
              if len(self.mag_samples) > self.max_samples:
@@ -59,13 +58,13 @@ class calibrate_imu:
                  self.mag_samples = self.mag_samples[50:]
 
         if self.publish_calibrated == True:
-            mag_raw = array([data.vector.x,data.vector.y,data.vector.z])
+            mag_raw = array([data.magnetic_field.x,data.magnetic_field.y,data.magnetic_field.z])
             mag_cal = ((self.mag_matrix.dot((mag_raw-self.mag_offset.T).T)).T)
-            calibrated_mag_msg = Vector3Stamped()
+            calibrated_mag_msg = MagneticField()
             calibrated_mag_msg.header.stamp = data.header.stamp
-            calibrated_mag_msg.vector.x = mag_cal[0]
-            calibrated_mag_msg.vector.y = mag_cal[1]
-            calibrated_mag_msg.vector.z = mag_cal[2]
+            calibrated_mag_msg.magnetic_field.x = mag_cal[0]
+            calibrated_mag_msg.magnetic_field.y = mag_cal[1]
+            calibrated_mag_msg.magnetic_field.z = mag_cal[2]
 
             self.calibrated_mag_pub.publish(calibrated_mag_msg)
 
